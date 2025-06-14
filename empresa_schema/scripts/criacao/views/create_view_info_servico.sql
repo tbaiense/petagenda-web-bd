@@ -20,6 +20,8 @@ CREATE OR REPLACE VIEW vw_info_servico AS
             s_o.nome AS nome_servico_oferecido,
             s_o.id_categoria AS id_categoria_servico_oferecido,
             c_s.nome AS nome_categoria_servico,
+            i_s.id_cliente AS id_cliente,
+            cli.nome AS nome_cliente,
             COUNT(DISTINCT p_s.id_pet) AS qtd_pet_servico,
             i_s.id_funcionario AS id_funcionario,
             f.nome AS nome_funcionario,
@@ -27,6 +29,7 @@ CREATE OR REPLACE VIEW vw_info_servico AS
         FROM info_servico AS i_s
                 INNER JOIN servico_oferecido AS s_o ON (s_o.id = i_s.id_servico_oferecido)
                     LEFT JOIN categoria_servico AS c_s ON (c_s.id = s_o.id_categoria)
+                INNER JOIN cliente AS cli ON (cli.id = i_s.id_cliente)
                 LEFT JOIN funcionario AS f ON (f.id = i_s.id_funcionario)
                 LEFT JOIN pet_servico AS p_s ON (p_s.id_info_servico = i_s.id)
         GROUP BY i_s.id

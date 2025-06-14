@@ -131,11 +131,11 @@ CREATE TRIGGER trg_pet_servico_insert
                 
                 IF id_esp_cur IS NOT NULL THEN
                     SET serv_tem_restr_esp = TRUE;
-                
-                    IF id_esp_cur = id_esp_este THEN
-                        SET esp_valida = TRUE;
-                        LEAVE especie_loop;
-                    END IF;
+                END IF;
+            
+                IF id_esp_cur = id_esp_este THEN
+                    SET esp_valida = TRUE;
+                    LEAVE especie_loop;
                 END IF;
                 
                 IF cur_done THEN
@@ -170,6 +170,10 @@ CREATE TRIGGER trg_pet_servico_insert_after
         IF NEW.id_info_servico IS NOT NULL THEN
             CALL get_valores_info_servico(NEW.id_info_servico, NEW_valor_servico, NEW_valor_total);
 
+            UPDATE info_servico SET id_cliente = (
+                SELECT id_cliente FROM pet WHERE id = NEW.id_pet LIMIT 1
+            ) WHERE id = NEW.id_info_servico; 
+        
             -- Obtendo id do servico_realizado
             SELECT
                 id

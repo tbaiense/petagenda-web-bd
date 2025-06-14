@@ -124,11 +124,15 @@ CREATE TABLE info_servico (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     id_servico_oferecido INT NOT NULL,
     id_funcionario INT,
+    id_cliente INT,
     observacoes VARCHAR(250),
 
     FOREIGN KEY (id_servico_oferecido) REFERENCES servico_oferecido(id),
-    FOREIGN KEY (id_funcionario) REFERENCES funcionario(id)
+    FOREIGN KEY (id_funcionario) REFERENCES funcionario(id),
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id)
 );
+
+
 
 CREATE TABLE pet_servico (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -142,6 +146,7 @@ CREATE TABLE pet_servico (
     FOREIGN KEY (id_pet) REFERENCES pet(id),
     FOREIGN KEY (id_info_servico) REFERENCES info_servico(id)
 );
+
 
 
 CREATE TABLE remedio_pet_servico (
@@ -285,6 +290,8 @@ CREATE OR REPLACE VIEW vw_cliente AS
     FROM cliente AS c
         LEFT JOIN endereco_cliente AS e_c ON (e_c.id_cliente = c.id);
 
+    
+    
 CREATE OR REPLACE VIEW vw_pet AS
     SELECT
         p_c.id AS id_pet,
@@ -305,6 +312,7 @@ CREATE OR REPLACE VIEW vw_pet AS
         INNER JOIN cliente AS c ON (c.id = p_c.id_cliente)
         LEFT JOIN especie AS e ON (e.id = p_c.id_especie)
     ORDER BY id_pet;
+
 
 
 CREATE OR REPLACE VIEW vw_info_servico AS
@@ -329,6 +337,8 @@ CREATE OR REPLACE VIEW vw_info_servico AS
             s_o.nome AS nome_servico_oferecido,
             s_o.id_categoria AS id_categoria_servico_oferecido,
             c_s.nome AS nome_categoria_servico,
+            i_s.id_cliente AS id_cliente,
+            cli.nome AS nome_cliente,
             COUNT(DISTINCT p_s.id_pet) AS qtd_pet_servico,
             i_s.id_funcionario AS id_funcionario,
             f.nome AS nome_funcionario,
@@ -336,6 +346,7 @@ CREATE OR REPLACE VIEW vw_info_servico AS
         FROM info_servico AS i_s
                 INNER JOIN servico_oferecido AS s_o ON (s_o.id = i_s.id_servico_oferecido)
                     LEFT JOIN categoria_servico AS c_s ON (c_s.id = s_o.id_categoria)
+                INNER JOIN cliente AS cli ON (cli.id = i_s.id_cliente)
                 LEFT JOIN funcionario AS f ON (f.id = i_s.id_funcionario)
                 LEFT JOIN pet_servico AS p_s ON (p_s.id_info_servico = i_s.id)
         GROUP BY i_s.id
@@ -739,10 +750,11 @@ CREATE TRIGGER trg_pet_servico_insert
         DECLARE restr_partic ENUM("individual", "coletivo");
 
         -- Condições de erro
+        DECLARE err_pet_inexistente CONDITION FOR SQLSTATE '45003';
         DECLARE err_dono_diferente CONDITION FOR SQLSTATE '45000'; /* pet inserido pertence a outro dono */
         DECLARE err_esp_incompativel CONDITION FOR SQLSTATE '45001'; /* espécie do pet é incompatível com as das restrições de espécie aplicadas */
         DECLARE err_qtd_partic_excedido CONDITION FOR SQLSTATE '45002'; /* não é possível adicionar outro pet, devido à restriçao de participantes aplicada  */
-
+        
          -- Cursores
         DECLARE cur_especie CURSOR FOR
             SELECT
@@ -756,7 +768,7 @@ CREATE TRIGGER trg_pet_servico_insert
 
         -- Handlers
         DECLARE CONTINUE HANDLER FOR NOT FOUND SET cur_done = TRUE;
-
+    
         -- Obtendo informação sobre a forma de cobrança do serviço
         SELECT
             preco, tipo_preco
@@ -793,6 +805,10 @@ CREATE TRIGGER trg_pet_servico_insert
         -- Obtém as informações do PET sendo inserido
         SELECT id_cliente, id_especie INTO id_cli_este, id_esp_este FROM pet WHERE id = NEW.id_pet;
         
+        IF id_esp_este IS NULL THEN
+            SIGNAL err_pet_inexistente SET MESSAGE_TEXT = "Não foi possível verificar a espécie de um dos pets inserido";
+        END IF;
+    
         IF id_pet_outro IS NOT NULL THEN /* Já existe outro pet para o info_servico */
 
             IF restr_partic = "individual" THEN
@@ -823,11 +839,11 @@ CREATE TRIGGER trg_pet_servico_insert
                 
                 IF id_esp_cur IS NOT NULL THEN
                     SET serv_tem_restr_esp = TRUE;
-                
-                    IF id_esp_cur = id_esp_este THEN
-                        SET esp_valida = TRUE;
-                        LEAVE especie_loop;
-                    END IF;
+                END IF;
+            
+                IF id_esp_cur = id_esp_este THEN
+                    SET esp_valida = TRUE;
+                    LEAVE especie_loop;
                 END IF;
                 
                 IF cur_done THEN
@@ -846,6 +862,7 @@ CREATE TRIGGER trg_pet_servico_insert
 DELIMITER ;
 
 
+
 DELIMITER $$
 CREATE TRIGGER trg_pet_servico_insert_after
     AFTER INSERT
@@ -861,6 +878,10 @@ CREATE TRIGGER trg_pet_servico_insert_after
         IF NEW.id_info_servico IS NOT NULL THEN
             CALL get_valores_info_servico(NEW.id_info_servico, NEW_valor_servico, NEW_valor_total);
 
+            UPDATE info_servico SET id_cliente = (
+                SELECT id_cliente FROM pet WHERE id = NEW.id_pet LIMIT 1
+            ) WHERE id = NEW.id_info_servico; 
+        
             -- Obtendo id do servico_realizado
             SELECT
                 id
