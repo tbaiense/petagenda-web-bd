@@ -1,4 +1,4 @@
--- DATA DE ATUALIZAÇÃO: 04/06/2025
+-- DATA DE ATUALIZAÇÃO: 14/06/2025
 
 -- SCHEMA ================================================================================================================================================================
 CREATE SCHEMA
@@ -9,6 +9,7 @@ USE emp_?;
 
 -- SETUP ================================================================================================================================================================
 SET foreign_key_checks = OFF;
+SET GLOBAL sql_mode  = 'TRADITIONAL';
 
 -- TABELAS ==============================================================================================================================================================
 
@@ -374,8 +375,9 @@ CREATE OR REPLACE VIEW vw_servico_requerido AS
         INNER JOIN cliente AS c ON (c.id = s_r.id_cliente);
 
 
-CREATE OR REPLACE VIEW vw_servico_oferecido AS
+CREATE OR REPLACE VIEW vw_servico_oferecido AS 
     SELECT
+        COUNT(s_o.id) OVER() AS qtd_servicos_oferecidos,
         s_o.id AS id_servico_oferecido,
         s_o.nome AS nome,
         s_o.preco AS preco,
@@ -469,6 +471,7 @@ CREATE OR REPLACE VIEW vw_pet_servico AS
 
 CREATE OR REPLACE VIEW vw_agendamento AS
     SELECT
+        COUNT(a.id) OVER() AS qtd_agendamento,
         a.id AS id_agendamento,
         a.dt_hr_marcada AS dt_hr_marcada,
         a.estado AS estado,

@@ -1,5 +1,6 @@
 CREATE OR REPLACE VIEW vw_servico_oferecido AS 
     SELECT
+        COUNT(s_o.id) OVER() AS qtd_servicos_oferecidos,
         s_o.id AS id_servico_oferecido,
         s_o.nome AS nome,
         s_o.preco AS preco,
