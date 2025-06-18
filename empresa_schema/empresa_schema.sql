@@ -430,6 +430,7 @@ CREATE OR REPLACE VIEW vw_servico_exercido AS
 
 CREATE OR REPLACE VIEW vw_servico_realizado AS
     SELECT 
+    	COUNT(s_r.id) OVER() AS qtd_servico_realizado,
         s_r.id AS id_servico_realizado,
         s_r.dt_hr_inicio AS dt_hr_inicio,
         s_r.dt_hr_fim AS dt_hr_fim,
