@@ -2598,11 +2598,10 @@ BEGIN
 END;$$
 DELIMITER ;
     
-
 DELIMITER $
 CREATE PROCEDURE relatorio_detalhado_servico_oferecido (
-    IN dt_hr_inicio DATETIME,
-    IN dt_hr_fim DATETIME
+    IN inicio DATETIME,
+    IN fim DATETIME
 )
 BEGIN
     DECLARE err_cotas_insuficiente CONDITION FOR SQLSTATE '45001';
@@ -2613,8 +2612,8 @@ BEGIN
     
     SET SESSION sql_mode = 'TRADITIONAL';
 
-    SET @inicio = dt_hr_inicio;
-    SET @fim = dt_hr_fim;
+    SET @inicio = inicio;
+    SET @fim = fim;
 
     WITH 
         s_cte AS (
@@ -2646,7 +2645,6 @@ BEGIN
 
 END;$$
 DELIMITER ;
-
 
 -- EVENTS =============================================================================================================================================
 

@@ -1,15 +1,19 @@
-DROP PROCEDURE IF EXISTS relatorio_detalhado_servico_oferecido;
-
 DELIMITER $
 CREATE PROCEDURE relatorio_detalhado_servico_oferecido (
-    IN dt_hr_inicio DATETIME,
-    IN dt_hr_fim DATETIME
+    IN inicio DATETIME,
+    IN fim DATETIME
 )
 BEGIN
+    DECLARE err_cotas_insuficiente CONDITION FOR SQLSTATE '45001';
+
+    IF dbo.validar_cotas("relatorio-detalhado") = FALSE THEN
+        SIGNAL err_cotas_insuficiente SET MESSAGE_TEXT = "Cotas insuficientes para geração de relatório detalhado";
+    END IF;
+    
     SET SESSION sql_mode = 'TRADITIONAL';
 
-    SET @inicio = dt_hr_inicio;
-    SET @fim = dt_hr_fim;
+    SET @inicio = inicio;
+    SET @fim = fim;
 
     WITH 
         s_cte AS (

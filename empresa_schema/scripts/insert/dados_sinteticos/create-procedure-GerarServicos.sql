@@ -27,7 +27,7 @@ BEGIN
         SET fim_datetime = DATE_ADD(inicio_datetime, INTERVAL duracao_minutos MINUTE);
         
         -- Seleciona IDs aleatórios
-        SET servico_id = 1 + FLOOR(RAND() * 7);
+        SET servico_id = 1 + FLOOR(RAND() * 6);
         SET funcionario_id = 1 + FLOOR(RAND() * 4);
         SET pet_id = 1 + FLOOR(RAND() * 78);
         
