@@ -1,15 +1,15 @@
--- DATA DE ATUALIZAÇÃO: 21/06/2025
+-- DATA DE ATUALIZAÇÃO: 28/06/2025
 
 -- SCHEMA ================================================================================================================================================================
-CREATE SCHEMA
-    emp_?
-    CHARACTER SET utf8mb4;
-
-USE emp_?;
+-- CREATE SCHEMA
+--    emp_?
+--    CHARACTER SET utf8mb4;
+--
+-- USE emp_?;
 
 -- SETUP ================================================================================================================================================================
 SET foreign_key_checks = OFF;
-SET GLOBAL sql_mode  = 'TRADITIONAL';
+-- SET GLOBAL sql_mode  = 'TRADITIONAL';
 
 -- TABELAS ==============================================================================================================================================================
 
@@ -430,7 +430,7 @@ CREATE OR REPLACE VIEW vw_servico_exercido AS
 
 CREATE OR REPLACE VIEW vw_servico_realizado AS
     SELECT 
-    	COUNT(s_r.id) OVER() AS qtd_servico_realizado,
+        COUNT(s_r.id) OVER() AS qtd_servico_realizado,
         s_r.id AS id_servico_realizado,
         s_r.dt_hr_inicio AS dt_hr_inicio,
         s_r.dt_hr_fim AS dt_hr_fim,
